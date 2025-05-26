@@ -401,7 +401,8 @@ socket_t zdtun_conn_get_socket(const zdtun_conn_t *conn) {
 
 void zdtun_conn_proxy(zdtun_conn_t *conn) {
   // NOTE: only TCP is currently supported
-  if(conn->tuple.ipproto == IPPROTO_TCP)
+//new
+ // if(conn->tuple.ipproto == IPPROTO_TCP)
     conn->proxy_mode = PROXY_SOCKS5;
 }
 
@@ -1534,7 +1535,10 @@ static int handle_udp_fwd(zdtun_t *tun, const zdtun_pkt_t *pkt, zdtun_conn_t *co
 
   if(tun->callbacks.account_packet)
     tun->callbacks.account_packet(tun, pkt, 1 /* to zdtun */, conn);
-
+if(conn->proxy_mode == PROXY_SOCKS5) {
+    // wait before sending the SYN+ACK
+    return socks5_connect(tun, conn);
+}
   if(send(conn->sock, pkt->l7, pkt->l7_len, 0) < 0) {
     close_with_socket_error(tun, conn, "UDP sendto");
     return 0;
